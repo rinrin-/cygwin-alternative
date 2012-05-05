@@ -523,6 +523,9 @@ create_signal_arrived ()
 
 /* Signal thread initialization.  Called from dll_crt0_1.
    This routine starts the signal handling thread.  */
+static void __stdcall apc_spawnthread(unsigned long p){
+	new cygthread (wait_sig, cygself, "sig");
+}
 void __stdcall
 sigproc_init ()
 {
@@ -540,7 +543,16 @@ sigproc_init ()
   /* sync_proc_subproc is used by proc_subproc.  It serializes
      access to the children and proc arrays.  */
   sync_proc_subproc.init ("sync_proc_subproc");
-  new cygthread (wait_sig, cygself, "sig");
+  /*
+   * Issue user APC call, and let the os decide when to call them.
+   * It is known as workaround. wait_sig thread wakes up faster.
+   */
+  if (!QueueUserAPC(apc_spawnthread,GetCurrentThread(),0)){
+    /*
+     * And failed. just call from here.
+     */
+    apc_spawnthread(0);
+  }
 }
 
 /* Called on process termination to terminate signal and process threads.
