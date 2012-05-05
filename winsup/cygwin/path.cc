@@ -1508,12 +1508,12 @@ conv_path_list (const char *src, char *dst, size_t size,
 extern "C" int
 symlink (const char *oldpath, const char *newpath)
 {
-  return symlink_worker (oldpath, newpath, allow_winsymlinks, false);
+  return symlink_worker (oldpath, newpath, allow_winsymlinks, allow_nativesymlinks, false);
 }
 
 int
 symlink_worker (const char *oldpath, const char *newpath, bool use_winsym,
-		bool isdevice)
+                bool use_nativesym, bool isdevice)
 {
   int res = -1;
   size_t len;
@@ -1527,7 +1527,8 @@ symlink_worker (const char *oldpath, const char *newpath, bool use_winsym,
   ULONG access = DELETE | FILE_GENERIC_WRITE;
   tmp_pathbuf tp;
   unsigned check_opt;
-  bool mk_winsym = use_winsym;
+  bool mk_winsym = use_winsym && !use_nativesym;
+  bool mk_nativesym = use_nativesym;
   bool has_trailing_dirsep = false;
 
   /* POSIX says that empty 'newpath' is invalid input while empty
@@ -1562,7 +1563,11 @@ symlink_worker (const char *oldpath, const char *newpath, bool use_winsym,
   win32_newpath.check (newpath, check_opt, stat_suffixes);
   /* MVFS doesn't handle the SYSTEM DOS attribute, but it handles the R/O
      attribute.  Therefore we create symlinks on MVFS always as shortcuts. */
-  mk_winsym |= win32_newpath.fs_is_mvfs ();
+  if (win32_newpath.fs_is_mvfs ())
+    {
+      mk_winsym = true;
+      mk_nativesym = false;
+    }
 
   if (mk_winsym && !win32_newpath.exists ()
       && (isdevice || !win32_newpath.fs_is_nfs ()))
@@ -1618,6 +1623,35 @@ symlink_worker (const char *oldpath, const char *newpath, bool use_winsym,
 	}
       NtClose (fh);
       res = 0;
+      goto done;
+    }
+
+  if (mk_nativesym)
+    {
+      win32_oldpath.check (oldpath, PC_SYM_NOFOLLOW, stat_suffixes);
+      DWORD dwFlags = win32_oldpath.isdir () ? SYMBOLIC_LINK_FLAG_DIRECTORY : 0;
+      WCHAR wc_oldpath[win32_oldpath.get_wide_win32_path_len () + 1];
+      win32_oldpath.get_wide_win32_path (wc_oldpath);
+      WCHAR wc_newpath[win32_newpath.get_wide_win32_path_len () + 1];
+      win32_newpath.get_wide_win32_path (wc_newpath);
+      if (isabspath (oldpath))
+        {
+          res = CreateSymbolicLinkW (wc_newpath, wc_oldpath, dwFlags) ? 0 : -1;
+        }
+      else
+        {
+          char *oldpath_trans = strdup (oldpath);
+          // Transform path separators
+          for (char *p = oldpath_trans; (p = strchr (p, '/')); p++)
+            *p = '\\';
+
+          tmp_pathbuf tp;
+          PWCHAR wc_oldpath_trans = tp.w_get ();
+          sys_mbstowcs ( wc_oldpath_trans, NT_MAX_PATH, (const char *) oldpath_trans);
+
+          res = CreateSymbolicLinkW (wc_newpath, wc_oldpath_trans, dwFlags) ? 0 : -1;
+          free (oldpath_trans);
+        }
       goto done;
     }
 

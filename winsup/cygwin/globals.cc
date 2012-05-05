@@ -57,6 +57,7 @@ bool allow_glob = true;
 bool ignore_case_with_glob = false;
 bool dos_file_warning = true;
 bool allow_winsymlinks = false;
+bool allow_nativesymlinks = false;
 bool reset_com = false; 
 bool detect_bloda = false;
 

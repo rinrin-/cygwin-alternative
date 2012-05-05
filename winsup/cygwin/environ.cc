@@ -121,6 +121,7 @@ static struct parse_thing
   {"reset_com", {&reset_com}, setbool, NULL, {{false}, {true}}},
   {"tty", {func: tty_is_gone}, isfunc, NULL, {{0}, {0}}},
   {"winsymlinks", {&allow_winsymlinks}, setbool, NULL, {{false}, {true}}},
+  {"nativesymlinks", {&allow_nativesymlinks}, setbool, NULL, {{false}, {true}}},
   {NULL, {0}, setdword, 0, {{0}, {0}}}
 };
 

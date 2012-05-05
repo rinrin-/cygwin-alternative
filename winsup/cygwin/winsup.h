@@ -248,7 +248,7 @@ extern "C" void vklog (int priority, const char *message, va_list ap);
 extern "C" void klog (int priority, const char *message, ...);
 bool child_copy (HANDLE, bool, ...);
 
-int symlink_worker (const char *, const char *, bool, bool)
+int symlink_worker (const char *, const char *, bool, bool, bool)
   __attribute__ ((regparm (3)));
 
 class path_conv;
