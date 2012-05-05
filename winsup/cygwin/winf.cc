@@ -73,6 +73,18 @@ linebuf::fromargv (av& newargv, const char *real_path, bool cmdlenoverflow_ok)
       char *p = NULL;
       const char *a;
 
+      if(cmdlenoverflow_ok == false )
+        {
+          /* here msys goes */
+          int newargvlen = strlen (newargv[i]);
+          char *tmpbuf = (char *)malloc (newargvlen + 1);
+          memcpy (tmpbuf, newargv[i], newargvlen + 1);
+          tmpbuf = msys_posix_to_win32_path(tmpbuf);
+          special_printf("msys_posix_to_win32_path newargv[%d] = %s -> %s", i, newargv[i], tmpbuf);
+          newargv.replace_maybe (i, tmpbuf);
+          free (tmpbuf);
+        }
+
       newargv.dup_maybe (i);
       a = i ? newargv[i] : (char *) real_path;
       int len = strlen (a);

@@ -57,6 +57,12 @@ class av
 	calloced = true;
       }
   }
+  void replace_maybe (int i, const char *newarg)
+  {
+    /* FIXME: should we worry about memory leak? */
+    if (i < argc)
+      argv[i] = cstrdup1 (newarg);
+  }
   void dup_maybe (int i)
   {
     if (i >= calloced)

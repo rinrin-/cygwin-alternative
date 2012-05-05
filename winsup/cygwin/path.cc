@@ -3050,12 +3050,12 @@ msys_scrub_retpath (char * const retpath)
   // 
   if ((strchr (retpath, ';')))
   {
-    backslashify (retpath, retpath, 0);
+    slashify (retpath, retpath, 0);
   } else
   {
-    slashify (retpath, retpath, 0);
+    backslashify (retpath, retpath, 0);
   }
-  debug_printf("returning: %s", retpath);
+  special_printf("returning: %s", retpath);
   return retpath;
 }
 
