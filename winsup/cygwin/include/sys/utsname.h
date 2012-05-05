@@ -15,13 +15,15 @@ details. */
 extern "C" {
 #endif
 
+#define UTSNAME_LEN	20
+
 struct utsname
 {
-  char sysname[20];
-  char nodename[20];
-  char release[20];
-  char version[20];
-  char machine[20];
+  char sysname[UTSNAME_LEN];
+  char nodename[UTSNAME_LEN];
+  char release[UTSNAME_LEN];
+  char version[UTSNAME_LEN];
+  char machine[UTSNAME_LEN];
 };
 
 int uname (struct utsname *);

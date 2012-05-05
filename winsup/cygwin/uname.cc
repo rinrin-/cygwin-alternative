@@ -21,6 +21,7 @@ extern "C" int
 uname (struct utsname *name)
 {
   SYSTEM_INFO sysinfo;
+  char msystem[128];
 
   myfault efault;
   if (efault.faulted (EFAULT))
@@ -29,7 +30,9 @@ uname (struct utsname *name)
   char *snp = strstr  (cygwin_version.dll_build_date, "SNP");
 
   memset (name, 0, sizeof (*name));
-  __small_sprintf (name->sysname, "CYGWIN_%s", wincap.osname ());
+  if (! GetEnvironmentVariable("MSYSTEM", msystem, sizeof (msystem)))
+      strcpy (msystem, "CYGWIN");
+  __small_sprintf (name->sysname, "%s_%s", msystem, wincap.osname ());
 
 #if 0
   /* Recognition of the real 64 bit CPU inside of a WOW64 system, irritates
@@ -42,9 +45,11 @@ uname (struct utsname *name)
 #else
   /* But it seems ok to add a hint to the sysname, that we're running under
      WOW64.  This might give an early clue if somebody encounters problems. */
+#if 0
   if (wincap.is_wow64 ())
     strncat (name->sysname, "-WOW64",
 	     sizeof name->sysname - strlen (name->sysname) - 1);
+#endif
 #endif
     GetSystemInfo (&sysinfo);
 
