@@ -33,6 +33,7 @@ extern int cygwin_posix_to_win32_path_list_buf_size (const char *)
   __attribute__ ((deprecated));
 extern int cygwin_conv_to_win32_path (const char *, char *)
   __attribute__ ((deprecated));
+extern char * msys_posix_to_win32_path (char const * const);
 extern int cygwin_conv_to_full_win32_path (const char *, char *)
   __attribute__ ((deprecated));
 extern int cygwin_conv_to_posix_path (const char *, char *)

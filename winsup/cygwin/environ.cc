@@ -922,6 +922,8 @@ static NO_COPY spenv spenvs[] =
   {NL ("HOMEPATH="), false, false, &cygheap_user::env_homepath},
   {NL ("LOGONSERVER="), false, false, &cygheap_user::env_logsrv},
   {NL ("PATH="), false, true, NULL},
+  /* FIXME: add #if here */
+  {NL ("MSYSTEM="), false, true, NULL},
   {NL ("SYSTEMDRIVE="), false, true, NULL},
   {NL ("SYSTEMROOT="), true, true, &cygheap_user::env_systemroot},
   {NL ("USERDOMAIN="), false, false, &cygheap_user::env_domain},
@@ -981,6 +983,7 @@ build_env (const char * const *envp, PWCHAR &envblock, int &envc,
   bool saw_spenv[SPENVS_SIZE] = {0};
 
   debug_printf ("envp %p", envp);
+  special_printf("no_envblock[%d]",no_envblock);
 
   /* How many elements? */
   for (n = 0; envp[n]; n++)
@@ -1063,6 +1066,7 @@ build_env (const char * const *envp, PWCHAR &envblock, int &envc,
 	{
 	  const char *p;
 	  win_env *conv;
+          char *w32path= NULL;
 	  len = strcspn (*srcp, "=") + 1;
 	  const char *rest = *srcp + len;
 
@@ -1078,6 +1082,13 @@ build_env (const char * const *envp, PWCHAR &envblock, int &envc,
 	  conv = getwinenv (*srcp, rest, &temp);
 	  if (conv)
 	    p = conv->native;	/* Use win32 path */
+          /* here msys goes */
+          /* FIXME: Detect if msys feature in CYGWIN env var is enabled */
+          else if ( !no_envblock )
+          {
+            w32path = msys_posix_to_win32_path(*srcp);
+            p = w32path;
+          }
 	  else
 	    p = *srcp;		/* Don't worry about it */
 
@@ -1108,6 +1119,9 @@ build_env (const char * const *envp, PWCHAR &envblock, int &envc,
 	      && s[3] == L'=')
 	    *s = L'=';
 	  s += slen + 1;
+
+          if( w32path != *srcp)
+            free(w32path);
 	}
       *s = L'\0';			/* Two null bytes at the end */
       assert ((s - envblock) <= tl);	/* Detect if we somehow ran over end
